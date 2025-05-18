@@ -138,6 +138,28 @@ class Timesheet(db.Model):
         if value not in self.ALLOWED_STATUSES:
             raise ValueError(f"Invalid timesheet status: {value}. Allowed: {self.ALLOWED_STATUSES}")
         return value
+    
+
+class TimeEntry(db.Model):
+    __tablename__ = 'time_entries'
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, nullable=False)
+    timesheet_id = db.Column(UUID(as_uuid=True), db.ForeignKey('timesheets.id'), nullable=False)
+    user_id = db.Column(UUID(as_uuid=True), db.ForeignKey('users1.id'), nullable=False)
+    task_id = db.Column(UUID(as_uuid=True), db.ForeignKey('tasks.id'), nullable=False)
+    date = db.Column(db.Date, nullable=False)
+    hours_worked = db.Column(db.Float, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    user = db.relationship('User', backref='time_entries')
+    timesheet = db.relationship('Timesheet', backref='time_entries')
+    task = db.relationship('Task', backref='time_entries')
+
+    @validates('hours_worked')
+    def validate_hours(self, key, value):
+        if not (8 <= value <= 24):
+            raise ValueError("Hours worked must be between 8 and 24.")
+        return value
 
 
 class Role(db.Model):
@@ -302,3 +324,17 @@ class TokenBlacklistSchema(Schema):
     client_id = fields.Str()
     created_at = fields.DateTime()
     updated_at = fields.DateTime()
+
+class TimeEntrySchema(Schema):
+    id = fields.UUID()
+    timesheet_id = fields.UUID(required=True)
+    user_id = fields.UUID(required=True)
+    task_id = fields.UUID(required=True)
+    date = fields.Date(required=True)
+    hours_worked = fields.Float(required=True)
+    created_at = fields.DateTime()
+
+    @ma_validates('hours_worked')
+    def validate_hours(self, value):
+        if not (8 <= value <= 24):
+            raise ValidationError("Hours worked must be between 8 and 24.")
