@@ -27,9 +27,10 @@ class Company(db.Model):
     contact_email = db.Column(db.String(100), nullable=False)
     contact_number = db.Column(db.String(20))
     address = db.Column(db.Text)
+    country_name = db.Column(db.String(100), db.ForeignKey('country.name'))
     password = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
-
+    country = db.relationship('Country', backref='companies')
 
 class User(db.Model):
     __tablename__ = 'users1'
@@ -42,10 +43,13 @@ class User(db.Model):
     phone = db.Column(db.String(20))
     password = db.Column(db.String(255))
     role = db.Column(db.String(20), nullable=False)
+    country_name = db.Column(db.String(100), db.ForeignKey('country.name'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     company = db.relationship('Company', backref='users')
+    country = db.relationship('Country', backref='users')
 
+    
     ALLOWED_ROLES = {'admin', 'manager', 'employee', 'contractor'}
 
     @validates('role')
@@ -63,10 +67,11 @@ class Client(db.Model):
     name = db.Column(db.String(100), nullable=False)
     code = db.Column(db.String(50), unique=True, nullable=False)
     description = db.Column(db.Text)
+    country_name = db.Column(db.String(100), db.ForeignKey('country.name'))
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
 
     company = db.relationship('Company', backref=db.backref('clients', lazy=True))
-
+    country = db.relationship('Country', backref='clients')
 
 class Project(db.Model):
     __tablename__ = 'projects'
